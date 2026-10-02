@@ -22,7 +22,6 @@ LangStat stats[MAX_LANGS] = {
     {".cpp", "C++", 0},
     {".hpp", "C++ Header", 0},
     {".sh", "Shell", 0},
-    {".mksh", "MKSH Script", 0},
     {".json", "JSON", 0},
     {".css", "CSS", 0},
     {".zlt", "Zlata Index", 0},
