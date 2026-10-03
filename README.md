@@ -1,8 +1,8 @@
-# TreeDir
-This is by far the smallest usable project i've done.
+# tree2
+Tree2 is an alternative to UNIX's tree utility.
 
-## What is TreeDir?
-TreeDir is a utility for recursivly displaying a tree of a directory.
+## Why tree2
+Tree2 is written with readablity and ease of coding in mind.
 
 ## Building
 Simply build with your compiler of choice, the file is in src/.

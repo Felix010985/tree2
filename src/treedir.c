@@ -1,3 +1,6 @@
+/* SPDX-License-Identifier: MIT */
+/* Copyright (c) 2026 FelixProfi */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,10 +30,14 @@ LangStat stats[MAX_LANGS] = {
     {".zlt", "Zlata Index", 0},
     {".md", "Markdown", 0}
 };
-int totalFiles = 0;
 
-int isDirectory(const char *dir_path) {
-    DIR *dir = opendir(dir_path);
+int totalFiles = 0;
+int totalDirsCount = 0;
+int totalFilesCount = 0;
+int totalExecutablesCount = 0;
+
+int isDirectory(const char *dirPath) {
+    DIR *dir = opendir(dirPath);
 
     if (dir) {
         return 0;
@@ -75,13 +82,13 @@ void countFileLang(const char *filename) {
 
 void newLine() { write(1, "\r\n", 2);}
 
-void printTree(const char *dir_path, int level, unsigned long long prefixMask) {
-    DIR *dir = opendir(dir_path);
+void printTree(const char *dirPath, int level, unsigned long long prefixMask) {
+    DIR *dir = opendir(dirPath);
     if (!dir) return;
 
     struct dirent *entry;
     struct dirent **namelist = NULL;
-    int n = scandir(dir_path, &namelist, NULL, alphasort);
+    int n = scandir(dirPath, &namelist, NULL, alphasort);
 
     if (n < 0) {
         closedir(dir);
@@ -104,23 +111,26 @@ void printTree(const char *dir_path, int level, unsigned long long prefixMask) {
         }
 
         currentEntry++;
-        int is_last = (currentEntry == totalEntries);
+        int isLast = (currentEntry == totalEntries);
 
         char fullPath[1024];
-        snprintf(fullPath, sizeof(fullPath), "%s/%s", dir_path, name);
+        snprintf(fullPath, sizeof(fullPath), "%s/%s", dirPath, name);
 
         struct stat st;
-        int is_dir = 0;
-        int is_reg = 0;
-        int is_exe = 0;
+        int isDir = 0;
+        int isReg = 0;
+        int isExe = 0;
 
         if (stat(fullPath, &st) == 0) {
             if (S_ISDIR(st.st_mode)) {
-                is_dir = 1;
+                isDir = 1;
+                totalDirsCount++;
             } else if (S_ISREG(st.st_mode)) {
-                is_reg = 1;
+                isReg = 1;
+                totalFilesCount++;
                 if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)) {
-                    is_exe = 1;
+                    isExe = 1;
+                    totalExecutablesCount++;
                 }
             }
         }
@@ -133,29 +143,29 @@ void printTree(const char *dir_path, int level, unsigned long long prefixMask) {
             }
         }
 
-        if (is_last) {
+        if (isLast) {
             printf("\033[37m└── \033[0m");
         } else {
             printf("\033[37m├── \033[0m");
         }
 
-        if (is_dir) {
+        if (isDir) {
             printf("\033[1;34m%s\033[0m\n", name);
-        } else if (is_exe) {
+        } else if (isExe) {
             printf("\033[1;32m%s\033[0m\n", name);
         } else {
             printf("\033[0m%s\n", name);
         }
 
-        if (is_dir) {
+        if (isDir) {
             unsigned long long nextMask = prefixMask;
-            if (!is_last) {
+            if (!isLast) {
                 nextMask |= (1ULL << level);
             } else {
                 nextMask &= ~(1ULL << level);
             }
             printTree(fullPath, level + 1, nextMask);
-        } else if (is_reg) {
+        } else if (isReg) {
             countFileLang(name);
         }
 
@@ -179,6 +189,7 @@ int main(int argc, char *argv[]) {
     printf("\033[1;34m%s\033[0m\n", targetDir);
     printTree(targetDir, 0, 0);
     newLine();
+    printf("\033[1;34m%d \033[1;37mdirectories, \033[0m%d \033[1;37mfiles and \033[1;32m%d \033[1;37mexecutables\033[0m\n\n", totalDirsCount, totalFilesCount, totalExecutablesCount);
 
     if (totalFiles == 0) {
         printf("Nothing found according to the table.\n");
